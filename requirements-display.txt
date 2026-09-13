@@ -1,0 +1,3 @@
+# Optional: GUI-capable OpenCV build, required for `--display`.
+# Conflicts with opencv-python-headless; pip will replace it.
+opencv-python>=4.8

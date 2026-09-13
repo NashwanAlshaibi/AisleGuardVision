@@ -1,0 +1,21 @@
+# AisleGuard Vision - core runtime requirements.
+#
+# These are everything needed to run the behavior engine, tracking, risk
+# scoring, event recording, API, simulation and the full test suite.
+#
+# Deep-learning inference (YOLO11) is intentionally separate: see
+# requirements-inference.txt. This keeps CI, the simulator and the behavior
+# unit tests runnable on machines with no GPU and no model weights.
+
+numpy>=1.24
+opencv-python-headless>=4.8
+pydantic>=2.5
+PyYAML>=6.0
+fastapi>=0.110
+uvicorn[standard]>=0.27
+requests>=2.31
+
+# Test / dev tooling (kept here so `pip install -r requirements.txt && pytest`
+# works straight out of a clone, which is a Phase 1 acceptance criterion).
+pytest>=8.0
+httpx>=0.26

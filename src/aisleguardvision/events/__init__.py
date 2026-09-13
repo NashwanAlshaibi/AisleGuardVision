@@ -1,0 +1,1 @@
+"""AisleGuard Vision events package."""

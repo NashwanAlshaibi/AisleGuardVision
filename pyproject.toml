@@ -1,0 +1,81 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "aisleguardvision"
+version = "0.1.0"
+description = "AisleGuard Vision - real-time retail loss-prevention behavioral risk analysis for human review"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "Proprietary" }
+authors = [{ name = "AisleGuard Vision" }]
+keywords = ["computer-vision", "retail", "loss-prevention", "yolo", "tracking"]
+
+# Core runtime dependencies.
+#
+# NOTE: torch / ultralytics are intentionally NOT core dependencies. The
+# behavior engine, tracking, risk scoring, event pipeline and the full test
+# suite run without any deep-learning framework installed. Install the
+# `inference` extra to enable live YOLO inference.
+dependencies = [
+    "numpy>=1.24",
+    "opencv-python-headless>=4.8",
+    "pydantic>=2.5",
+    "PyYAML>=6.0",
+    "fastapi>=0.110",
+    "uvicorn[standard]>=0.27",
+    "requests>=2.31",
+]
+
+[project.optional-dependencies]
+inference = [
+    "torch>=2.2",
+    "torchvision>=0.17",
+    "ultralytics>=8.3.0",
+]
+# Desktop/dev installs want the GUI build of OpenCV for `--display`.
+display = ["opencv-python>=4.8"]
+dev = [
+    "pytest>=8.0",
+    "pytest-cov>=4.1",
+    "httpx>=0.26",
+    "ruff>=0.4",
+    "mypy>=1.9",
+    "psutil>=5.9",
+]
+
+[project.scripts]
+aisleguard = "aisleguardvision.main:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+aisleguardvision = ["py.typed"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "-q --strict-markers"
+markers = [
+    "gpu: requires a CUDA device and installed models",
+    "slow: long-running test",
+]
+filterwarnings = ["ignore::DeprecationWarning"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src", "tests", "scripts"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "C4", "SIM", "RET"]
+ignore = ["B008", "SIM108"]
+
+[tool.mypy]
+python_version = "3.11"
+warn_unused_ignores = true
+ignore_missing_imports = true
+packages = ["aisleguardvision"]
+mypy_path = "src"
