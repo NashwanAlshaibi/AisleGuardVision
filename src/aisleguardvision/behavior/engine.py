@@ -198,6 +198,14 @@ class TemporalBehaviorEngine:
         context = self._contexts.get(person_id)
         return context.machine.state if context else BehaviorState.IDLE
 
+    def states(self) -> dict[int, BehaviorState]:
+        """Current behavior state per tracked person (for the scheduler)."""
+        return {pid: ctx.machine.state for pid, ctx in self._contexts.items()}
+
+    def risks(self) -> dict[int, float]:
+        """Peak episode risk per tracked person (for the scheduler)."""
+        return {pid: ctx.peak_risk for pid, ctx in self._contexts.items()}
+
     @property
     def transition_counts(self) -> dict[str, int]:
         return dict(self._transition_counts)

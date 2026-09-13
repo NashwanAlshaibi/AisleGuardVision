@@ -1,0 +1,123 @@
+# AisleGuard Vision - models, inference, scheduling and tracking.
+
+# ---------------------------------------------------------------------------
+# Models
+# ---------------------------------------------------------------------------
+models:
+  # Backend implementation. "ultralytics" today. "tensorrt", "onnx", "triton"
+  # and "deepstream" are the planned additions; adding one is a new subclass
+  # of DetectorBackend and changes nothing in behavior/ or tracking/.
+  backend: ultralytics
+
+  # YOLO11 weights. Downloaded automatically on first run.
+  #   yolo11n = nano    (fastest, use on Jetson Orin NX / for many cameras)
+  #   yolo11s = small   (good accuracy/speed balance on a dev GPU)
+  #   yolo11m = medium  (higher accuracy, fewer cameras per GPU)
+  detector: yolo11n.pt
+  pose: yolo11n-pose.pt
+
+  # Custom retail merchandise model. EMPTY BY DEFAULT AND THAT IS HONEST:
+  # no COCO-trained model can recognize a wig, a hair bundle, a jar of gel, a
+  # cosmetics package or most other store inventory. With this empty the system
+  # runs zone-driven and caps risk below the alert threshold.
+  # Point it at YOLO-format weights trained on store inventory to enable
+  # item-level evidence. Nothing else needs to change.
+  product: ""
+
+  device: ${AISLEGUARD_DEVICE:-auto}   # auto | cuda | cuda:0 | mps | cpu
+  fp16: true                            # ignored where unsupported
+  warmup: true                          # avoid a slow first frame on CUDA
+
+# ---------------------------------------------------------------------------
+# Inference
+# ---------------------------------------------------------------------------
+inference:
+  image_size: 640
+  person_confidence: 0.35
+  object_confidence: 0.35
+  pose_confidence: 0.30
+  # Keypoints below this are not used in any decision, and are not drawn.
+  keypoint_confidence: 0.30
+  nms_iou: 0.50
+  max_detections: 100
+
+  # Frames from different cameras coalesced into one backend call.
+  # 1 for the single-camera MVP; a multi-camera GPU worker raises this to 8-16.
+  max_batch_size: 1
+  batch_timeout_ms: 8
+
+  # COCO classes kept. "cell phone" is not optional: it drives the single most
+  # important false-positive suppression in the product.
+  keep_classes:
+    - person
+    - cell phone
+    - handbag
+    - backpack
+    - suitcase
+    - bottle
+    - cup
+    - book
+
+# ---------------------------------------------------------------------------
+# Frame scheduling
+#
+# Decode rate, detection rate and pose rate are three independent budgets.
+# This is the main lever for multi-camera scaling: 64 cameras at 30 FPS is
+# 1,920 frames/second, and no GPU runs a detector on all of them.
+# ---------------------------------------------------------------------------
+scheduler:
+  detection_fps: 10        # tracking interpolates between detections
+  pose_fps: 8              # baseline pose rate
+  pose_idle_fps: 2         # nobody near merchandise
+  pose_active_fps: 10      # someone at a shelf, or risk climbing
+  adaptive_pose: true
+  pose_only_for_relevant_people: true
+  pose_relevance_distance_ratio: 1.5
+  max_pose_targets: 8
+  pose_staleness_seconds: 0.75
+
+# ---------------------------------------------------------------------------
+# Tracking
+# ---------------------------------------------------------------------------
+tracking:
+  # ByteTrack. Lifetimes are in SECONDS so behavior is identical at 10 and
+  # 30 FPS.
+  person:
+    high_threshold: 0.50
+    low_threshold: 0.15          # the low-confidence recovery pass
+    match_iou_threshold: 0.20
+    second_match_iou_threshold: 0.40
+    revive_iou_threshold: 0.30
+    min_hits: 3
+    max_lost_seconds: 1.5        # survives brief occlusion behind a display
+    new_track_threshold: 0.55
+
+  # Merchandise candidates and the disappearance ladder.
+  item:
+    match_iou_threshold: 0.25
+    max_center_displacement_ratio: 2.0
+    min_hits_for_stability: 4
+    min_age_for_stability_seconds: 0.30
+    # VISIBLE -> POSSIBLY_OCCLUDED -> OCCLUDED -> MISSING.
+    # An object disappearing is NEVER by itself evidence of concealment.
+    possibly_occluded_after_seconds: 0.25
+    occluded_after_seconds: 0.60
+    missing_after_seconds: 1.25     # derived from behavior.item_missing_timeout_seconds
+    remove_after_seconds: 20
+
+  # Hand/item and pose/person association. Distances are fractions of the
+  # subject's body height, so one configuration covers the whole aisle depth.
+  association:
+    hand_item_distance_ratio: 0.18
+    hand_item_max_distance_ratio: 0.40
+    hand_item_min_iou: 0.05
+    # Four independent channels, normalized on load.
+    weight_distance: 0.40
+    weight_iou: 0.20
+    weight_motion: 0.20        # does the item move WITH the wrist?
+    weight_persistence: 0.20
+    min_association_confidence: 0.45
+    min_association_seconds: 0.40
+    motion_window_seconds: 0.60
+    pose_min_iou: 0.35
+    pose_min_containment: 0.55

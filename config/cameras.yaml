@@ -1,0 +1,100 @@
+# AisleGuard Vision - camera definitions and interaction zones.
+#
+# CREDENTIALS NEVER LIVE IN THIS FILE. Sources are written as ${VAR} and
+# resolved from the environment at load time; see .env.example. Camera URLs are
+# sanitized before they reach any log record, API response or overlay.
+#
+# A camera whose ${VAR} is unset is skipped with a warning rather than failing
+# the process, so a dev box with one camera's credentials can load a config
+# that lists sixty-four.
+#
+# ZONE CALIBRATION: zones are polygons in the camera's own pixel coordinates,
+# so re-aiming or re-resolutioning a camera invalidates them. Check them with:
+#     python scripts/test_stream.py --source <src> --zones --camera-id cam_001
+
+cameras:
+  - id: cam_001
+    name: Test Camera
+    source: ${CAM_001_RTSP}
+    enabled: true
+    target_decode_fps: 0          # 0 = as fast as the stream delivers
+    target_inference_fps: 0       # 0 = use scheduler.detection_fps
+    queue_size: 4                 # small on purpose: fresh frames beat a backlog
+    stall_timeout_seconds: 10
+    reconnect_initial_seconds: 1
+    reconnect_max_seconds: 60
+    reconnect_jitter: 0.25
+    max_consecutive_failures: 0   # 0 = never give up on a fixed store camera
+
+    zones:
+      # The shelf face this camera watches.
+      - id: shelf_001
+        kind: shelf
+        name: Main Shelf
+        polygon:
+          - [100, 150]
+          - [600, 150]
+          - [600, 700]
+          - [100, 700]
+
+      # High-value section. risk_multiplier scales POSITIVE contributions only;
+      # exculpatory evidence is never discounted for standing in an aisle.
+      - id: shelf_002_high_value
+        kind: high_value
+        name: High Value Section
+        risk_multiplier: 1.15
+        polygon:
+          - [620, 150]
+          - [900, 150]
+          - [900, 700]
+          - [620, 700]
+
+      # Where shoppers stage baskets. Placement here strongly reduces risk.
+      - id: basket_area_001
+        kind: basket
+        name: Basket Staging
+        polygon:
+          - [950, 500]
+          - [1250, 500]
+          - [1250, 700]
+          - [950, 700]
+
+      # Masks out a region that would otherwise generate noise: a doorway, a
+      # mirror, a display screen playing video, or a neighbouring aisle.
+      - id: exclusion_001
+        kind: exclusion
+        name: Staff Doorway
+        polygon:
+          - [0, 0]
+          - [200, 0]
+          - [200, 140]
+          - [0, 140]
+
+  - id: cam_002
+    name: Wig Wall
+    source: ${CAM_002_RTSP}
+    enabled: false
+    zones:
+      - id: shelf_wig_wall
+        kind: high_value
+        name: Wig Wall
+        risk_multiplier: 1.25
+        polygon:
+          - [150, 100]
+          - [1100, 100]
+          - [1100, 650]
+          - [150, 650]
+
+  - id: cam_003
+    name: Checkout
+    source: ${CAM_003_RTSP}
+    enabled: false
+    zones:
+      - id: checkout_001
+        kind: checkout
+        name: Register 1
+        polygon:
+          - [300, 250]
+          - [1000, 250]
+          - [1000, 700]
+          - [300, 700]

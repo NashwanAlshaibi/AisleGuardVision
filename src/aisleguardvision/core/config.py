@@ -664,6 +664,10 @@ class CameraConfig(_Base):
     max_consecutive_failures: int = Field(default=0, ge=0)
     #: Loop file sources. Useful for demos; ignored for live streams.
     loop_file_source: bool = False
+    #: Play a file source at its native frame rate instead of as fast as it
+    #: decodes. Wanted for a display demo, NOT for batch analysis of recorded
+    #: footage, where decoding flat out is the point.
+    pace_file_source: bool = False
 
     @model_validator(mode="after")
     def _default_name(self) -> CameraConfig:
