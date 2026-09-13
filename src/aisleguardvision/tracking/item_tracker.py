@@ -120,7 +120,9 @@ class ItemTracker:
 
     def active_count(self) -> int:
         return sum(
-            1 for t in self._tracks.values() if t.status in (ItemStatus.VISIBLE, ItemStatus.POSSIBLY_OCCLUDED)
+            1
+            for t in self._tracks.values()
+            if t.status in (ItemStatus.VISIBLE, ItemStatus.POSSIBLY_OCCLUDED)
         )
 
     def resolve(self, item_id: int, status: ItemStatus, timestamp: float) -> None:

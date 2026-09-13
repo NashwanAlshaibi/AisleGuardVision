@@ -324,9 +324,7 @@ class HandItemAssociator:
                     if distance_ratio <= config.hand_item_distance_ratio:
                         distance_score = 1.0
                     else:
-                        span = (
-                            config.hand_item_max_distance_ratio - config.hand_item_distance_ratio
-                        )
+                        span = config.hand_item_max_distance_ratio - config.hand_item_distance_ratio
                         distance_score = max(
                             0.0, 1.0 - (distance_ratio - config.hand_item_distance_ratio) / span
                         )

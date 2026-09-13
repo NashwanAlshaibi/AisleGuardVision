@@ -104,9 +104,7 @@ def test_association_advances_to_item_associated():
 def test_storage_approach_requires_an_association():
     """Hand-to-waist without a tracked item is a pocket adjustment, and the
     state machine must not advance for it."""
-    assert (
-        derive([EvidenceType.HAND_MOVED_TO_STORAGE_REGION]) is BehaviorState.IDLE
-    )
+    assert derive([EvidenceType.HAND_MOVED_TO_STORAGE_REGION]) is BehaviorState.IDLE
 
 
 def test_full_sequence_without_the_threshold_stops_at_item_missing():
@@ -121,9 +119,7 @@ def test_review_alert_requires_both_sequence_and_score():
     """Sequence position alone never produces an alert, and neither does a
     score reached without the sequence."""
     assert derive(FULL_SEQUENCE, risk=84.9) is not BehaviorState.REVIEW_ALERT
-    assert (
-        derive([EvidenceType.SHELF_INTERACTION], risk=99.0) is BehaviorState.SHELF_INTERACTION
-    )
+    assert derive([EvidenceType.SHELF_INTERACTION], risk=99.0) is BehaviorState.SHELF_INTERACTION
 
 
 # ---------------------------------------------------------------------------
@@ -170,9 +166,7 @@ def test_benign_branch_wins_from_the_deepest_sequence_state():
 
 
 def test_benign_terminal_state_is_held():
-    assert (
-        derive([], current=BehaviorState.ITEM_RETURNED) is BehaviorState.ITEM_RETURNED
-    )
+    assert derive([], current=BehaviorState.ITEM_RETURNED) is BehaviorState.ITEM_RETURNED
 
 
 def test_benign_terminal_states_are_marked():

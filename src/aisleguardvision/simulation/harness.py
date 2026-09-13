@@ -28,7 +28,11 @@ from ..core.types import (
     PoseObservation,
     ThreatLevel,
 )
-from ..tracking.association import HandItemAssociator, WristHistoryStore, associate_poses_with_tracks
+from ..tracking.association import (
+    HandItemAssociator,
+    WristHistoryStore,
+    associate_poses_with_tracks,
+)
 from ..tracking.item_tracker import ItemTracker
 from ..tracking.person_tracker import PersonTracker, attach_pose
 from .scenarios import Scenario, SimFrame
@@ -188,7 +192,9 @@ class SimulationRunner:
             zones=zones,
             wrists=self.wrists,
             item_tracker=self.item_tracker,
-            track_quality={t.track_id: self.person_tracker.track_quality(t.track_id) for t in tracks},
+            track_quality={
+                t.track_id: self.person_tracker.track_quality(t.track_id) for t in tracks
+            },
             item_detection_available=item_detection_available,
             container_boxes=container_boxes,
         )

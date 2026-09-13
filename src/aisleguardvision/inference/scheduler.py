@@ -28,10 +28,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from ..behavior.zones import ZoneRegistry
 from ..core.config import SchedulerConfig
 from ..core.logging import get_logger
 from ..core.types import BehaviorState, PersonTrack, ZoneKind
-from ..behavior.zones import ZoneRegistry
 
 logger = get_logger(__name__)
 
@@ -216,9 +216,7 @@ class FrameScheduler:
             reason = "not relevant"
 
             if zones is not None and zones.has_merchandise_zones:
-                hit = zones.nearest_zone(
-                    track.bbox.center, MERCHANDISE_KINDS, track.body_height
-                )
+                hit = zones.nearest_zone(track.bbox.center, MERCHANDISE_KINDS, track.body_height)
                 if hit is not None:
                     if hit.inside:
                         score = max(score, 0.8)

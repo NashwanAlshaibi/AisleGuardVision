@@ -195,9 +195,7 @@ class CameraPipeline:
             # so it must reach the associator.
             for detection in bundle.objects:
                 if detection.object_class.is_personal_effect:
-                    items.append(
-                        _as_item(detection, source="coco_personal_effect")
-                    )
+                    items.append(_as_item(detection, source="coco_personal_effect"))
 
             self.item_tracker.update(items, timestamp)
             self.metrics.inc(MetricNames.FRAMES_PROCESSED, **self._labels)
@@ -358,9 +356,7 @@ class CameraPipeline:
             )
         return events
 
-    def _track_metadata(
-        self, observation: BehaviorObservation, frame: Frame
-    ) -> dict[str, object]:
+    def _track_metadata(self, observation: BehaviorObservation, frame: Frame) -> dict[str, object]:
         track = self.person_tracker.get(observation.person_id)
         item = (
             self.item_tracker.get(observation.associated_item_id)
@@ -374,9 +370,7 @@ class CameraPipeline:
                 break
         return {
             "track_age_seconds": round(track.track_age, 2) if track else 0.0,
-            "track_confidence": round(
-                self.person_tracker.track_quality(observation.person_id), 3
-            ),
+            "track_confidence": round(self.person_tracker.track_quality(observation.person_id), 3),
             "associated_item_id": observation.associated_item_id,
             "associated_hand": observation.associated_hand.value
             if observation.associated_hand

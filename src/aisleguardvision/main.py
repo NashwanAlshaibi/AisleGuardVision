@@ -96,9 +96,7 @@ def build_parser() -> argparse.ArgumentParser:
     display.add_argument(
         "--no-zones-overlay", action="store_true", help="Do not draw configured zones"
     )
-    display.add_argument(
-        "--record-output", help="Write the annotated video to this path (mp4)"
-    )
+    display.add_argument("--record-output", help="Write the annotated video to this path (mp4)")
 
     runtime = parser.add_argument_group("runtime")
     runtime.add_argument("--config-dir", default=None, help="Configuration directory")
@@ -132,7 +130,9 @@ def build_parser() -> argparse.ArgumentParser:
     logging_group.add_argument("--log-level", default=None, help="DEBUG | INFO | WARNING | ERROR")
     logging_group.add_argument("--log-format", default=None, choices=["text", "json"])
     logging_group.add_argument("--log-file", default=None, help="Also write logs to this file")
-    logging_group.add_argument("--version", action="version", version=f"AisleGuard Vision {__version__}")
+    logging_group.add_argument(
+        "--version", action="version", version=f"AisleGuard Vision {__version__}"
+    )
     return parser
 
 
@@ -475,9 +475,7 @@ class Application:
                             1,
                         ),
                         "pose_fps": round(
-                            self.metrics.rate(
-                                MetricNames.POSE_FPS, {"camera_id": camera_id}
-                            ).value,
+                            self.metrics.rate(MetricNames.POSE_FPS, {"camera_id": camera_id}).value,
                             1,
                         ),
                         "inference_ms": round(pipeline.last_inference_latency_ms, 1),
@@ -585,9 +583,7 @@ def resolve_cameras(config: AppConfig, args: argparse.Namespace) -> list[CameraC
                 extra={"fields": {"missing": ",".join(sorted(missing))}},
             )
 
-    skipped = [
-        c.id for c in config.cameras.cameras if c.enabled and not c.is_resolvable()
-    ]
+    skipped = [c.id for c in config.cameras.cameras if c.enabled and not c.is_resolvable()]
     if skipped:
         logger.warning(
             "skipping cameras whose source environment variable is unset",

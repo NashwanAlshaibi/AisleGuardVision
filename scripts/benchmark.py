@@ -42,7 +42,11 @@ from aisleguardvision.core.metrics import configure_metrics  # noqa: E402
 from aisleguardvision.core.types import Frame  # noqa: E402
 from aisleguardvision.inference.backend import create_detector_backend  # noqa: E402
 from aisleguardvision.inference.detector import PersonDetector  # noqa: E402
-from aisleguardvision.inference.device import cuda_memory_mb, log_device, select_device  # noqa: E402
+from aisleguardvision.inference.device import (  # noqa: E402
+    cuda_memory_mb,
+    log_device,
+    select_device,
+)
 from aisleguardvision.inference.pose import PoseEstimator  # noqa: E402
 from aisleguardvision.inference.product_detector import create_product_detector  # noqa: E402
 from aisleguardvision.pipeline import CameraPipeline  # noqa: E402
@@ -138,9 +142,7 @@ def synthetic_frames(count: int, width: int, height: int) -> list[np.ndarray]:
     as a floor on latency rather than a ceiling.
     """
     rng = np.random.default_rng(1234)
-    return [
-        rng.integers(0, 255, (height, width, 3), dtype=np.uint8) for _ in range(count)
-    ]
+    return [rng.integers(0, 255, (height, width, 3), dtype=np.uint8) for _ in range(count)]
 
 
 def build_pipeline(config: AppConfig, camera_id: str, detector, pose, product) -> CameraPipeline:
@@ -270,12 +272,17 @@ def print_result(result: BenchmarkResult) -> None:
         )
     print()
     if result.gpu_reserved_mb:
-        print(f"  GPU memory        : {result.gpu_allocated_mb:.0f} MB allocated, "
-              f"{result.gpu_reserved_mb:.0f} MB reserved")
+        print(
+            f"  GPU memory        : {result.gpu_allocated_mb:.0f} MB allocated, "
+            f"{result.gpu_reserved_mb:.0f} MB reserved"
+        )
     else:
         print("  GPU memory        : n/a (not running on CUDA)")
-    print(f"  process CPU       : {result.cpu_percent:.0f}%" if result.cpu_percent
-          else "  process CPU       : n/a (install psutil for CPU measurement)")
+    print(
+        f"  process CPU       : {result.cpu_percent:.0f}%"
+        if result.cpu_percent
+        else "  process CPU       : n/a (install psutil for CPU measurement)"
+    )
     print()
 
 

@@ -27,7 +27,11 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 from aisleguardvision.core.config import AppConfig, load_config  # noqa: E402
 from aisleguardvision.core.logging import configure_logging  # noqa: E402
 from aisleguardvision.simulation.harness import SimulationResult, SimulationRunner  # noqa: E402
-from aisleguardvision.simulation.scenarios import SCENARIOS, all_scenarios, get_scenario  # noqa: E402
+from aisleguardvision.simulation.scenarios import (  # noqa: E402
+    SCENARIOS,
+    all_scenarios,
+    get_scenario,
+)
 
 RULE = "=" * 78
 THIN = "-" * 78
@@ -47,8 +51,10 @@ def print_result(result: SimulationResult, verbose: bool, timeline: bool) -> Non
     print(f"  actual   : {result.outcome}")
     print(f"  peak risk: {result.peak_risk:.1f}  ({result.peak_threat.value})")
     print(f"  peak state: {result.peak_state.value}")
-    print(f"  frames   : {len(result.outcomes)}  duration: "
-          f"{result.outcomes[-1].timestamp if result.outcomes else 0:.2f}s")
+    print(
+        f"  frames   : {len(result.outcomes)}  duration: "
+        f"{result.outcomes[-1].timestamp if result.outcomes else 0:.2f}s"
+    )
     if not scenario.item_detection_available:
         print("  note     : running WITHOUT a merchandise detector (zone-only mode)")
 

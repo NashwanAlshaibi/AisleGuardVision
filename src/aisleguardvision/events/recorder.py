@@ -21,7 +21,6 @@ rolling buffer lives in memory and is discarded unless something happens.
 
 from __future__ import annotations
 
-import json
 import queue
 import threading
 import time
@@ -32,11 +31,11 @@ from pathlib import Path
 import cv2
 import numpy as np
 
+from ..camera.frame_buffer import BufferedFrame, CircularFrameBuffer, write_clip
 from ..core.config import RecordingConfig, StorageConfig
 from ..core.logging import get_logger
 from ..core.metrics import MetricNames, MetricsRegistry, get_metrics
 from ..core.types import SecurityEvent
-from ..camera.frame_buffer import BufferedFrame, CircularFrameBuffer, write_clip
 from .models import SecurityEventModel
 
 logger = get_logger(__name__)
@@ -318,9 +317,7 @@ class IncidentStore:
         if not self.root.exists():
             return []
         pattern = f"{camera_id}/*/*.json" if camera_id else "*/*/*.json"
-        paths = sorted(
-            self.root.glob(pattern), key=lambda p: p.stat().st_mtime, reverse=True
-        )
+        paths = sorted(self.root.glob(pattern), key=lambda p: p.stat().st_mtime, reverse=True)
         events: list[SecurityEventModel] = []
         for path in paths:
             event = self._load(path)

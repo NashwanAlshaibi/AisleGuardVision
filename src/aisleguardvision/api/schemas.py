@@ -45,9 +45,7 @@ class CameraResponse(BaseModel):
     name: str
     state: CameraState
     enabled: bool
-    source_label: str = Field(
-        description="Sanitized source; RTSP passwords are never returned"
-    )
+    source_label: str = Field(description="Sanitized source; RTSP passwords are never returned")
     resolution: tuple[int, int] | None = None
     decode_fps: float = 0.0
     inference_fps: float = 0.0

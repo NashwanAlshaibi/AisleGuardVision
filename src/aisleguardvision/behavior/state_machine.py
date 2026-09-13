@@ -100,7 +100,9 @@ class StateTransition:
 class BehaviorStateMachine:
     """Tracks one person's position in the concealment sequence."""
 
-    def __init__(self, initial: BehaviorState = BehaviorState.IDLE, history_limit: int = 64) -> None:
+    def __init__(
+        self, initial: BehaviorState = BehaviorState.IDLE, history_limit: int = 64
+    ) -> None:
         self._state = initial
         self._entered_at: float = 0.0
         self._history: list[StateTransition] = []
@@ -167,10 +169,10 @@ def derive_state(
     best = BehaviorState.IDLE
     best_reason = "no qualifying evidence"
     for state, requirements in STATE_REQUIREMENTS.items():
-        if all(requirement in active_evidence for requirement in requirements):
-            if SEQUENCE_ORDER[state] > SEQUENCE_ORDER[best]:
-                best = state
-                best_reason = "evidence: " + ", ".join(r.value for r in requirements)
+        satisfied = all(requirement in active_evidence for requirement in requirements)
+        if satisfied and SEQUENCE_ORDER[state] > SEQUENCE_ORDER[best]:
+            best = state
+            best_reason = "evidence: " + ", ".join(r.value for r in requirements)
 
     # 3. The alert state additionally requires the score to cross the
     #    threshold. Sequence position alone never produces an alert.

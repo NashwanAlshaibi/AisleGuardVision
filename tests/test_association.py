@@ -17,6 +17,7 @@ from aisleguardvision.core.types import (
     PoseObservation,
     TrackState,
 )
+from aisleguardvision.simulation.scenarios import make_item, make_person
 from aisleguardvision.tracking.association import (
     HandItemAssociator,
     WristHistoryStore,
@@ -26,8 +27,6 @@ from aisleguardvision.tracking.association import (
 from aisleguardvision.tracking.item_tracker import ItemTracker
 from aisleguardvision.tracking.kalman import greedy_match, iou_matrix
 from aisleguardvision.tracking.person_tracker import PersonTracker, attach_pose
-from aisleguardvision.simulation.scenarios import make_item, make_person
-
 from conftest import person_detection
 
 KEYPOINT_CONFIDENCE = 0.3
@@ -43,7 +42,9 @@ def track_from_person(person, track_id: int = 1, timestamp: float = 1.0) -> Pers
         last_seen=timestamp,
         state=TrackState.CONFIRMED,
     )
-    attach_pose(track, PoseObservation.from_array(person.keypoints, person.bbox, timestamp), timestamp)
+    attach_pose(
+        track, PoseObservation.from_array(person.keypoints, person.bbox, timestamp), timestamp
+    )
     return track
 
 
@@ -315,9 +316,7 @@ def run_association(wrist: Point, item_centre: Point, frames: int = 12, dt: floa
         track = track_from_person(person, timestamp=timestamp)
         store.record_pose(1, track.pose, timestamp, KEYPOINT_CONFIDENCE)
         items = item_tracker.update([make_item(item_centre)], timestamp)
-        results = associator.associate(
-            [track], items, store, timestamp, KEYPOINT_CONFIDENCE
-        )
+        results = associator.associate([track], items, store, timestamp, KEYPOINT_CONFIDENCE)
     return results, item_tracker
 
 

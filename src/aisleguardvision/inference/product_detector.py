@@ -103,9 +103,7 @@ class ProductDetector(ABC):
         """
         return self.info().provides_merchandise_detection
 
-    def from_detections(
-        self, detections: list[Detection], source: str
-    ) -> list[ItemDetection]:
+    def from_detections(self, detections: list[Detection], source: str) -> list[ItemDetection]:
         """Convert already-computed object detections into item candidates.
 
         Lets a proxy detector reuse the main detector's output instead of
@@ -126,8 +124,12 @@ class ProductDetector(ABC):
             )
         return items
 
-    def close(self) -> None:
-        """Release any model resources."""
+    def close(self) -> None:  # noqa: B027 - optional hook, not an abstract method
+        """Release any model resources.
+
+        Concrete and empty on purpose: only the model-backed detectors hold
+        resources worth releasing.
+        """
 
 
 class ZoneOnlyProductDetector(ProductDetector):

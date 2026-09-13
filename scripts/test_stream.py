@@ -131,8 +131,10 @@ def main(argv: list[str] | None = None) -> int:
             cv2.namedWindow(window)
             if args.pick_zone:
                 cv2.setMouseCallback(window, _on_mouse)
-                print("  left-click to add a vertex, right-click to undo, 'w' to write YAML, "
-                      "'q' to quit")
+                print(
+                    "  left-click to add a vertex, right-click to undo, 'w' to write YAML, "
+                    "'q' to quit"
+                )
         except cv2.error:
             print("  display unavailable (headless OpenCV build); continuing without a window")
             interactive = False

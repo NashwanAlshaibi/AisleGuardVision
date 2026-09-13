@@ -18,16 +18,16 @@ What is drawn:
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 import cv2
 import numpy as np
 
 from ..core.types import (
+    COCO_SKELETON,
     BehaviorObservation,
     BehaviorState,
     BoundingBox,
-    COCO_SKELETON,
     Hand,
     ItemStatus,
     ItemTrack,
@@ -248,9 +248,7 @@ class OverlayRenderer:
             self._draw_storage_regions(image, observation.storage_regions)
 
     @staticmethod
-    def _draw_storage_regions(
-        image: np.ndarray, regions: list[StorageRegionEstimate]
-    ) -> None:
+    def _draw_storage_regions(image: np.ndarray, regions: list[StorageRegionEstimate]) -> None:
         for region in regions:
             cv2.circle(
                 image,

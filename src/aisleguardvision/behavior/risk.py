@@ -47,7 +47,9 @@ MAX_SCORE = 100.0
 class RiskEngine:
     """Turns an evidence ledger into an explainable 0-100 score."""
 
-    def __init__(self, config: RiskConfig | None = None, behavior: BehaviorConfig | None = None) -> None:
+    def __init__(
+        self, config: RiskConfig | None = None, behavior: BehaviorConfig | None = None
+    ) -> None:
         self.config = config or RiskConfig()
         self.behavior = behavior or BehaviorConfig()
 

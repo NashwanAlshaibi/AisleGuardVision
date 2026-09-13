@@ -12,7 +12,6 @@ from aisleguardvision.core.config import AppConfig, CameraConfig, ZoneConfig
 from aisleguardvision.core.types import BehaviorState, ThreatLevel
 from aisleguardvision.events.models import build_event
 from aisleguardvision.events.recorder import IncidentRecorder, IncidentStore
-
 from test_events import assessment
 
 

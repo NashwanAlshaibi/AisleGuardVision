@@ -11,6 +11,7 @@ to confront a shopper. Every one of these must stay green.
 from __future__ import annotations
 
 import pytest
+from pydantic import ValidationError
 
 from aisleguardvision.core.config import AppConfig
 from aisleguardvision.core.types import BehaviorState, EvidenceType, ThreatLevel
@@ -65,9 +66,7 @@ def test_full_concealment_sequence_reaches_high_risk(runner):
 
     alert = result.alerts[0]
     assert alert.risk.positive_evidence, "an alert must carry its supporting evidence"
-    assert "No basket or cart placement" in " ".join(
-        e.description for e in alert.active_evidence
-    )
+    assert "No basket or cart placement" in " ".join(e.description for e in alert.active_evidence)
 
 
 def test_concealment_alert_explains_itself(runner):
@@ -218,7 +217,7 @@ def test_zone_only_ceiling_is_enforced_even_at_a_low_threshold():
     config = AppConfig()
     # The config layer refuses a ceiling at or above the threshold, which is
     # the invariant that keeps zone-only mode from ever alerting.
-    with pytest.raises(Exception):
+    with pytest.raises(ValidationError):
         AppConfig.model_validate(
             {"behavior": {"alert_threshold": 50, "zone_only_risk_ceiling": 59}}
         )

@@ -145,9 +145,7 @@ def create_app(config: AppConfig | None = None) -> FastAPI:
         tags=["cameras"],
         dependencies=guard,
     )
-    def get_camera(
-        camera_id: str, state: RuntimeState = Depends(require_state)
-    ) -> CameraResponse:
+    def get_camera(camera_id: str, state: RuntimeState = Depends(require_state)) -> CameraResponse:
         camera_status = state.status(camera_id)
         if camera_status is None:
             raise HTTPException(status_code=404, detail=f"unknown camera {camera_id!r}")
@@ -242,9 +240,7 @@ def _to_camera_response(camera_status, state: RuntimeState) -> CameraResponse:
     )
 
 
-def _set_camera_enabled(
-    camera_id: str, enabled: bool, state: RuntimeState
-) -> CameraActionResponse:
+def _set_camera_enabled(camera_id: str, enabled: bool, state: RuntimeState) -> CameraActionResponse:
     manager = state.camera_manager
     if manager is None:
         raise HTTPException(status_code=503, detail="camera manager is not running")
@@ -253,9 +249,7 @@ def _set_camera_enabled(
         raise HTTPException(status_code=404, detail=f"unknown camera {camera_id!r}")
     camera_status = state.status(camera_id)
     action = "enabled" if enabled else "disabled"
-    logger.info(
-        "camera %s via API", action, extra={"fields": {"camera_id": camera_id}}
-    )
+    logger.info("camera %s via API", action, extra={"fields": {"camera_id": camera_id}})
     return CameraActionResponse(
         camera_id=camera_id,
         enabled=enabled,

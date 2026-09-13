@@ -182,9 +182,7 @@ class ZoneRegistry:
         pixel distance into a scale-invariant ratio, which is what the
         behavior engine thresholds on.
         """
-        candidates = [
-            z for z in self._zones if z.enabled and (kinds is None or z.kind in kinds)
-        ]
+        candidates = [z for z in self._zones if z.enabled and (kinds is None or z.kind in kinds)]
         if not candidates:
             return []
         query = np.array([[point.x, point.y]], dtype=np.float64)

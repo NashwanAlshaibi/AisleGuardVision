@@ -24,8 +24,8 @@ import numpy as np
 
 from ..core.config import ZoneConfig
 from ..core.types import (
-    BoundingBox,
     COCO_KEYPOINT_ORDER,
+    BoundingBox,
     ItemDetection,
     KeypointName,
     ObjectClass,
@@ -252,9 +252,7 @@ def build_frames(keyframes: list[Keyframe], duration: float, fps: float) -> list
         elif before.item is not None and span <= 1e-9:
             items.append(make_item(before.item, before.item_class))
 
-        frames.append(
-            SimFrame(timestamp=timestamp, persons=[make_person(wrist)], items=items)
-        )
+        frames.append(SimFrame(timestamp=timestamp, persons=[make_person(wrist)], items=items))
     return frames
 
 

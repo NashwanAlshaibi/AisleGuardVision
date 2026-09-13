@@ -151,8 +151,7 @@ def shelf_interaction(
         evidence_type=EvidenceType.SHELF_INTERACTION,
         timestamp=ctx.timestamp,
         description=(
-            f"{_hand_label(ctx.hand)} interacted with shelf zone '{zone_name}' "
-            f"for {duration:.2f}s"
+            f"{_hand_label(ctx.hand)} interacted with shelf zone '{zone_name}' for {duration:.2f}s"
         ),
         confidence=confidence,
         person_id=ctx.person_id,
@@ -196,7 +195,9 @@ def stable_association(ctx: EvidenceContext, duration: float, confidence: float)
     )
 
 
-def item_removed_from_shelf(ctx: EvidenceContext, zone_name: str, confidence: float) -> EvidenceEvent:
+def item_removed_from_shelf(
+    ctx: EvidenceContext, zone_name: str, confidence: float
+) -> EvidenceEvent:
     return EvidenceEvent(
         evidence_type=EvidenceType.ITEM_REMOVED_FROM_SHELF,
         timestamp=ctx.timestamp,
@@ -231,7 +232,9 @@ def hand_moved_to_storage(
     )
 
 
-def concealment_motion(ctx: EvidenceContext, speed_ratio: float, confidence: float) -> EvidenceEvent:
+def concealment_motion(
+    ctx: EvidenceContext, speed_ratio: float, confidence: float
+) -> EvidenceEvent:
     return EvidenceEvent(
         evidence_type=EvidenceType.CONCEALMENT_MOTION_PROFILE,
         timestamp=ctx.timestamp,
@@ -385,7 +388,9 @@ def temporary_occlusion(ctx: EvidenceContext, reason: str) -> EvidenceEvent:
     return EvidenceEvent(
         evidence_type=EvidenceType.TEMPORARY_OCCLUSION,
         timestamp=ctx.timestamp,
-        description=f"Item {ctx.item_id} disappearance is consistent with temporary occlusion: {reason}",
+        description=(
+            f"Item {ctx.item_id} disappearance is consistent with temporary occlusion: {reason}"
+        ),
         confidence=1.0,
         person_id=ctx.person_id,
         item_id=ctx.item_id,

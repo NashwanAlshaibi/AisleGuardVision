@@ -84,8 +84,7 @@ class AlertCooldown:
         if escalation >= self.escalation_delta:
             return CooldownDecision(
                 True,
-                f"risk escalated by {escalation:.1f} "
-                f"({record.risk_score:.1f} -> {risk_score:.1f})",
+                f"risk escalated by {escalation:.1f} ({record.risk_score:.1f} -> {risk_score:.1f})",
             )
 
         return CooldownDecision(

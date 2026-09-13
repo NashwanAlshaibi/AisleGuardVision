@@ -21,7 +21,7 @@ import numpy as np
 
 from ..core.config import InferenceConfig, ModelsConfig
 from ..core.logging import get_logger
-from ..core.types import BoundingBox, COCO_KEYPOINT_ORDER, Detection, ObjectClass, PoseObservation
+from ..core.types import COCO_KEYPOINT_ORDER, BoundingBox, Detection, ObjectClass, PoseObservation
 from .backend import (
     BackendCapabilities,
     BackendError,
@@ -153,9 +153,7 @@ class UltralyticsBackend(DetectorBackend):
             if self._keep and class_name.lower() not in self._keep and not self._is_pose:
                 continue
 
-            object_class = (
-                ObjectClass.PERSON if self._is_pose else map_class_name(class_name)
-            )
+            object_class = ObjectClass.PERSON if self._is_pose else map_class_name(class_name)
             if object_class is ObjectClass.UNKNOWN and not self._is_pose:
                 continue
 

@@ -71,7 +71,18 @@ src = ["src", "tests", "scripts"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "UP", "B", "C4", "SIM", "RET"]
-ignore = ["B008", "SIM108"]
+ignore = [
+    "B008",    # FastAPI's Depends() in defaults is the framework's idiom
+    "SIM108",  # a ternary is not always clearer than an if/else
+    # `class X(str, Enum)` rather than `StrEnum`: StrEnum changes what str()
+    # returns, and these values are serialized into incident JSON and webhook
+    # payloads. Keeping the explicit form makes that contract stable.
+    "UP042",
+    # `try/except: pass` in best-effort teardown paths. The explicit form with
+    # a comment saying why the failure is ignored reads better here than
+    # contextlib.suppress.
+    "SIM105",
+]
 
 [tool.mypy]
 python_version = "3.11"

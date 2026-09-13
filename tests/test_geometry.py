@@ -28,7 +28,6 @@ from aisleguardvision.core.config import StorageRegionConfig
 from aisleguardvision.core.types import (
     BoundingBox,
     Hand,
-    KeypointName,
     PersonTrack,
     Point,
     PoseObservation,

@@ -37,8 +37,13 @@ class AlertProvider(ABC):
     def send(self, event: SecurityEventModel) -> bool:
         """Deliver one event. Returns success. Must not raise."""
 
-    def close(self) -> None:
-        """Release resources held by the provider."""
+    def close(self) -> None:  # noqa: B027 - optional hook, not an abstract method
+        """Release resources held by the provider.
+
+        Deliberately concrete and empty: most providers hold nothing to
+        release, and forcing every subclass to implement a no-op would be
+        noise.
+        """
 
 
 class ConsoleAlertProvider(AlertProvider):
@@ -381,7 +386,7 @@ def trigger_alert(
     Returns ``None`` when no dispatcher has been configured, rather than
     silently creating global state.
     """
-    from ..core.types import BehaviorState, EventType, RiskContribution, EvidenceType
+    from ..core.types import BehaviorState, EventType, EvidenceType, RiskContribution
 
     if _default_dispatcher is None:
         logger.error(

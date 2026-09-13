@@ -100,9 +100,7 @@ class CircularFrameBuffer:
         while self._frames and self._frames[0].timestamp < cutoff:
             self._frames.popleft()
 
-    def snapshot(
-        self, start: float | None = None, end: float | None = None
-    ) -> list[BufferedFrame]:
+    def snapshot(self, start: float | None = None, end: float | None = None) -> list[BufferedFrame]:
         """Frames within ``[start, end]``, oldest first."""
         with self._lock:
             frames = list(self._frames)

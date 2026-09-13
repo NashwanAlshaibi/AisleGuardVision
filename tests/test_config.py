@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
 from aisleguardvision.core.config import (
     AppConfig,
@@ -169,19 +170,19 @@ def test_sanitize_mapping_redacts_sensitive_keys():
 def test_unknown_key_is_rejected():
     """A typo in a safety-relevant config must fail loudly, not silently keep
     a default."""
-    with pytest.raises(Exception):
+    with pytest.raises(ValidationError):
         InferenceConfig(image_sizee=640)
 
 
 def test_out_of_range_values_are_rejected():
-    with pytest.raises(Exception):
+    with pytest.raises(ValidationError):
         InferenceConfig(person_confidence=1.5)
-    with pytest.raises(Exception):
+    with pytest.raises(ValidationError):
         InferenceConfig(max_detections=0)
 
 
 def test_occlusion_ladder_must_be_monotonic():
-    with pytest.raises(Exception):
+    with pytest.raises(ValidationError):
         ItemTrackerConfig(
             possibly_occluded_after_seconds=2.0,
             occluded_after_seconds=1.0,
@@ -192,14 +193,14 @@ def test_occlusion_ladder_must_be_monotonic():
 def test_bytetrack_thresholds_must_be_ordered():
     from aisleguardvision.core.config import ByteTrackConfig
 
-    with pytest.raises(Exception):
+    with pytest.raises(ValidationError):
         ByteTrackConfig(high_threshold=0.2, low_threshold=0.8)
 
 
 def test_association_distance_bounds_must_be_ordered():
     from aisleguardvision.core.config import AssociationConfig
 
-    with pytest.raises(Exception):
+    with pytest.raises(ValidationError):
         AssociationConfig(hand_item_distance_ratio=0.5, hand_item_max_distance_ratio=0.2)
 
 
@@ -215,40 +216,36 @@ def test_association_weights_are_normalized():
 
 
 def test_zone_polygon_needs_three_vertices():
-    with pytest.raises(Exception):
+    with pytest.raises(ValidationError):
         ZoneConfig(id="z", polygon=[(0, 0), (1, 1)])
 
 
 def test_zone_kinds_are_validated():
     zone = ZoneConfig(id="z", kind="high_value", polygon=[(0, 0), (1, 0), (1, 1)])
     assert zone.kind is ZoneKind.HIGH_VALUE
-    with pytest.raises(Exception):
+    with pytest.raises(ValidationError):
         ZoneConfig(id="z", kind="not_a_kind", polygon=[(0, 0), (1, 0), (1, 1)])
 
 
 def test_webhook_enabled_without_a_url_is_rejected():
     from aisleguardvision.core.config import WebhookConfig
 
-    with pytest.raises(Exception):
+    with pytest.raises(ValidationError):
         WebhookConfig(enabled=True, url="")
 
 
 def test_duplicate_camera_ids_are_rejected():
-    with pytest.raises(Exception):
+    with pytest.raises(ValidationError):
         CamerasConfig(
             cameras=[CameraConfig(id="dup", source="0"), CameraConfig(id="dup", source="1")]
         )
 
 
 def test_global_zone_referencing_an_unknown_camera_is_rejected():
-    with pytest.raises(Exception):
+    with pytest.raises(ValidationError):
         CamerasConfig(
             cameras=[CameraConfig(id="cam_a", source="0")],
-            zones=[
-                ZoneConfig(
-                    id="z", camera_id="cam_missing", polygon=[(0, 0), (1, 0), (1, 1)]
-                )
-            ],
+            zones=[ZoneConfig(id="z", camera_id="cam_missing", polygon=[(0, 0), (1, 0), (1, 1)])],
         )
 
 
@@ -305,7 +302,7 @@ def test_alert_threshold_drives_the_high_risk_band():
 
 
 def test_alert_threshold_below_the_review_band_is_rejected():
-    with pytest.raises(Exception):
+    with pytest.raises(ValidationError):
         AppConfig.model_validate(
             {"behavior": {"alert_threshold": 50, "zone_only_risk_ceiling": 40}}
         )
@@ -351,9 +348,7 @@ def test_load_yaml_rejects_a_non_mapping(tmp_path):
 
 
 def test_invalid_config_raises_config_error(tmp_path):
-    (tmp_path / "app.yaml").write_text(
-        "behavior:\n  alert_threshold: 500\n", encoding="utf-8"
-    )
+    (tmp_path / "app.yaml").write_text("behavior:\n  alert_threshold: 500\n", encoding="utf-8")
     with pytest.raises(ConfigError):
         load_config(tmp_path)
 
@@ -364,9 +359,7 @@ def test_overrides_are_applied_on_top(tmp_path):
 
 
 def test_config_dir_can_come_from_the_environment(monkeypatch, tmp_path):
-    (tmp_path / "app.yaml").write_text(
-        "behavior:\n  cooldown_seconds: 11\n", encoding="utf-8"
-    )
+    (tmp_path / "app.yaml").write_text("behavior:\n  cooldown_seconds: 11\n", encoding="utf-8")
     monkeypatch.setenv("AISLEGUARD_CONFIG_DIR", str(tmp_path))
     # DEFAULT_CONFIG_DIR is read at import time, so pass it explicitly here;
     # the environment variable is what main.py's --config-dir default uses.

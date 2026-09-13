@@ -314,7 +314,9 @@ class PoseObservation:
     ) -> PoseObservation:
         """Build from a ``(17, 3)`` ``[x, y, confidence]`` array in COCO order."""
         if array.ndim != 2 or array.shape[0] != len(COCO_KEYPOINT_ORDER):
-            raise ValueError(f"expected ({len(COCO_KEYPOINT_ORDER)}, 3) keypoint array, got {array.shape}")
+            raise ValueError(
+                f"expected ({len(COCO_KEYPOINT_ORDER)}, 3) keypoint array, got {array.shape}"
+            )
         keypoints: dict[KeypointName, Keypoint] = {}
         for name, row in zip(COCO_KEYPOINT_ORDER, array, strict=True):
             conf = float(row[2]) if array.shape[1] > 2 else 1.0
@@ -692,7 +694,9 @@ class ShelfZone:
         if self._bounds is None:
             xs = self.polygon[:, 0]
             ys = self.polygon[:, 1]
-            self._bounds = BoundingBox(float(xs.min()), float(ys.min()), float(xs.max()), float(ys.max()))
+            self._bounds = BoundingBox(
+                float(xs.min()), float(ys.min()), float(xs.max()), float(ys.max())
+            )
         return self._bounds
 
 
@@ -941,7 +945,8 @@ class RiskAssessment:
 
     def explain(self) -> str:
         lines = [
-            f"risk={self.risk_score:.1f} ({self.threat_level.value}) state={self.behavior_state.value}"
+            f"risk={self.risk_score:.1f} ({self.threat_level.value}) "
+            f"state={self.behavior_state.value}"
         ]
         lines.extend(
             f"  {c.applied_weight:+7.2f}  {c.evidence_type.value}: {c.description}"

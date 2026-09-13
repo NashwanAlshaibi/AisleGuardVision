@@ -25,9 +25,7 @@ def write_video(path, frames: int = 20, size=(160, 120), fps: float = 20.0) -> s
     import cv2
 
     width, height = size
-    writer = cv2.VideoWriter(
-        str(path), cv2.VideoWriter_fourcc(*"mp4v"), fps, (width, height)
-    )
+    writer = cv2.VideoWriter(str(path), cv2.VideoWriter_fourcc(*"mp4v"), fps, (width, height))
     assert writer.isOpened()
     for index in range(frames):
         writer.write(np.full((height, width, 3), (index * 10) % 256, dtype=np.uint8))
@@ -150,9 +148,7 @@ def test_give_up_honours_the_failure_budget():
         unlimited.open()
     assert not unlimited.give_up(), "0 means never give up on a fixed store camera"
 
-    limited = VideoStream(
-        CameraConfig(id="cam", source="/nope.mp4", max_consecutive_failures=3)
-    )
+    limited = VideoStream(CameraConfig(id="cam", source="/nope.mp4", max_consecutive_failures=3))
     for _ in range(3):
         limited.open()
     assert limited.give_up()
@@ -197,9 +193,7 @@ def test_end_of_file_can_loop(tmp_path):
 
 
 def test_credentials_never_appear_in_the_sanitized_label():
-    stream = VideoStream(
-        CameraConfig(id="cam", source="rtsp://operator:hunter2@10.0.0.5:554/s")
-    )
+    stream = VideoStream(CameraConfig(id="cam", source="rtsp://operator:hunter2@10.0.0.5:554/s"))
     assert "hunter2" not in stream.safe_source
     assert "operator" in stream.safe_source
 
@@ -432,8 +426,9 @@ def test_duplicate_zone_ids_are_rejected():
     registry = ZoneRegistry("cam")
     zone = ZoneConfig(id="dup", polygon=[(0, 0), (10, 0), (10, 10)])
     ZoneRegistry.from_config("cam", [zone])
-    from aisleguardvision.core.types import ShelfZone
     import numpy as np
+
+    from aisleguardvision.core.types import ShelfZone
 
     shelf = ShelfZone(
         zone_id="dup",

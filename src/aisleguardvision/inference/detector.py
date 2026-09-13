@@ -135,16 +135,18 @@ class PersonDetector:
             if object_class is ObjectClass.PERSON:
                 if detection.confidence >= inference.person_confidence:
                     bundle.people.append(detection)
+            elif detection.confidence < inference.object_confidence:
+                continue
             elif object_class in CONTAINER_CLASSES:
-                if detection.confidence >= inference.object_confidence:
-                    bundle.containers.append(detection)
+                bundle.containers.append(detection)
             elif object_class is not ObjectClass.UNKNOWN:
-                if detection.confidence >= inference.object_confidence:
-                    bundle.objects.append(detection)
+                bundle.objects.append(detection)
         return bundle
 
     def warmup(self) -> None:
-        self.backend.warmup(width=self.config.inference.image_size, height=self.config.inference.image_size)
+        self.backend.warmup(
+            width=self.config.inference.image_size, height=self.config.inference.image_size
+        )
 
     def close(self) -> None:
         self.backend.close()

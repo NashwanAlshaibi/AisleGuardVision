@@ -57,14 +57,10 @@ class CameraDecodeWorker:
 
         self._frame_id = 0
         self._state = CameraState.IDLE
-        self._decode_rate = self.metrics.rate(
-            MetricNames.DECODE_FPS, {"camera_id": self.camera_id}
-        )
+        self._decode_rate = self.metrics.rate(MetricNames.DECODE_FPS, {"camera_id": self.camera_id})
         self._labels = {"camera_id": self.camera_id}
         #: Minimum interval between delivered frames when the camera is rate-capped.
-        self._min_interval = (
-            1.0 / config.target_decode_fps if config.target_decode_fps > 0 else 0.0
-        )
+        self._min_interval = 1.0 / config.target_decode_fps if config.target_decode_fps > 0 else 0.0
         self._last_delivered = 0.0
 
     # -- lifecycle ---------------------------------------------------------
@@ -149,9 +145,9 @@ class CameraDecodeWorker:
                 self._stop.wait(0.25)
                 continue
 
-            if not self._stream.is_open:
-                if not self._try_open():
-                    continue
+            if not self._stream.is_open and not self._try_open():
+                # Still waiting out the reconnect backoff.
+                continue
 
             if self._stream.is_stalled():
                 logger.warning(

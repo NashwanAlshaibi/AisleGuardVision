@@ -40,9 +40,7 @@ class KalmanBoxFilter:
         std_measurement: float = 0.05,
     ) -> None:
         centre = box.center
-        self.x = np.array(
-            [centre.x, centre.y, box.width, box.height, 0.0, 0.0], dtype=np.float64
-        )
+        self.x = np.array([centre.x, centre.y, box.width, box.height, 0.0, 0.0], dtype=np.float64)
         self._std_position = std_position
         self._std_velocity = std_velocity
         self._std_measurement = std_measurement

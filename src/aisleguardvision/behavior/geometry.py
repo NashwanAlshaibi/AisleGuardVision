@@ -182,7 +182,9 @@ def normalized_distance(a: Point, b: Point, reference_length: float) -> float:
     return a.distance_to(b) / reference_length
 
 
-def body_axes(pose: PoseObservation, min_confidence: float = 0.0) -> tuple[np.ndarray, np.ndarray] | None:
+def body_axes(
+    pose: PoseObservation, min_confidence: float = 0.0
+) -> tuple[np.ndarray, np.ndarray] | None:
     """Return unit vectors ``(down_axis, right_axis)`` in image coordinates.
 
     ``down_axis`` points from the shoulder line toward the hip line -- i.e.
@@ -434,7 +436,9 @@ def motion_profile(
 
     inward = 0.0
     if body_center is not None:
-        to_center_start = np.array([body_center.x - first.position.x, body_center.y - first.position.y])
+        to_center_start = np.array(
+            [body_center.x - first.position.x, body_center.y - first.position.y]
+        )
         norm = np.linalg.norm(to_center_start)
         if norm > EPSILON:
             inward = float(np.dot(np.array([dx, dy]), to_center_start / norm)) / reference_length
@@ -490,9 +494,13 @@ def trajectory_similarity(
             # Both effectively stationary: uninformative, skip rather than
             # scoring it as perfect agreement.
             continue
-        cosine = float(np.dot(va, vb) / (mag_a * mag_b)) if mag_a > EPSILON and mag_b > EPSILON else 0.0
+        cosine = (
+            float(np.dot(va, vb) / (mag_a * mag_b)) if mag_a > EPSILON and mag_b > EPSILON else 0.0
+        )
         # Penalize differing speeds as well as differing directions.
-        speed_agreement = min(mag_a, mag_b) / max(mag_a, mag_b) if max(mag_a, mag_b) > EPSILON else 0.0
+        speed_agreement = (
+            min(mag_a, mag_b) / max(mag_a, mag_b) if max(mag_a, mag_b) > EPSILON else 0.0
+        )
         score = max(0.0, cosine) * (0.5 + 0.5 * speed_agreement)
         weighted_sum += score * motion_scale
         weight_total += motion_scale

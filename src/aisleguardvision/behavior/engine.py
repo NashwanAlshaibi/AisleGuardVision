@@ -268,9 +268,13 @@ class TemporalBehaviorEngine:
             raise_evidence(
                 ev.low_track_confidence(ctx, track_quality, behavior.low_track_confidence)
             )
-        pose = track.pose if track.has_fresh_pose(
-            timestamp, self.config.detection.scheduler.pose_staleness_seconds
-        ) else None
+        pose = (
+            track.pose
+            if track.has_fresh_pose(
+                timestamp, self.config.detection.scheduler.pose_staleness_seconds
+            )
+            else None
+        )
         if pose is not None:
             torso_confidence = pose.torso_confidence()
             if torso_confidence < behavior.low_pose_confidence:
@@ -298,9 +302,18 @@ class TemporalBehaviorEngine:
         )
 
         if track_is_mature and pose is not None:
-            self._evaluate_shelf_interaction(context, track, pose, zones, timestamp, ctx, raise_evidence)
+            self._evaluate_shelf_interaction(
+                context, track, pose, zones, timestamp, ctx, raise_evidence
+            )
             self._evaluate_associations(
-                context, track, associations, items_by_id, item_tracker, timestamp, ctx, raise_evidence
+                context,
+                track,
+                associations,
+                items_by_id,
+                item_tracker,
+                timestamp,
+                ctx,
+                raise_evidence,
             )
             self._evaluate_item_removal(context, items_by_id, zones, timestamp, ctx, raise_evidence)
             self._evaluate_hand_to_storage(
@@ -407,7 +420,9 @@ class TemporalBehaviorEngine:
             hit = zones.nearest_zone(wrist, MERCHANDISE_ZONE_KINDS, body_height)
             if hit is None:
                 continue
-            in_contact = hit.inside or hit.normalized_distance <= behavior.shelf_approach_distance_ratio
+            in_contact = (
+                hit.inside or hit.normalized_distance <= behavior.shelf_approach_distance_ratio
+            )
             key = (hand, hit.zone.zone_id)
             if not in_contact:
                 continue
@@ -426,11 +441,17 @@ class TemporalBehaviorEngine:
             ctx.zone_id = hit.zone.zone_id
             # Confidence tapers with distance: a wrist deep inside the shelf
             # face is stronger evidence than one hovering at the boundary.
-            confidence = 1.0 if hit.inside else float(
-                np.clip(
-                    1.0 - hit.normalized_distance / max(behavior.shelf_approach_distance_ratio, 1e-6),
-                    0.2,
-                    1.0,
+            confidence = (
+                1.0
+                if hit.inside
+                else float(
+                    np.clip(
+                        1.0
+                        - hit.normalized_distance
+                        / max(behavior.shelf_approach_distance_ratio, 1e-6),
+                        0.2,
+                        1.0,
+                    )
                 )
             )
             raise_evidence(ev.shelf_interaction(ctx, hit.zone.name, duration, confidence))
@@ -571,7 +592,14 @@ class TemporalBehaviorEngine:
         ctx.zone_id = None
 
     def _evaluate_hand_to_storage(
-        self, context, track: PersonTrack, pose, wrists: WristHistoryStore, timestamp, ctx, raise_evidence
+        self,
+        context,
+        track: PersonTrack,
+        pose,
+        wrists: WristHistoryStore,
+        timestamp,
+        ctx,
+        raise_evidence,
     ) -> None:
         """Stages 8-9: is the hand travelling toward a plausible storage region?
 
@@ -783,7 +811,9 @@ class TemporalBehaviorEngine:
         if nearest is None or nearest[1] > behavior.storage_regions.approach_radius_multiplier:
             # Vanished somewhere unremarkable: ordinary occlusion.
             raise_evidence(
-                ev.temporary_occlusion(ctx, "item disappeared away from any personal storage region")
+                ev.temporary_occlusion(
+                    ctx, "item disappeared away from any personal storage region"
+                )
             )
             return
 
@@ -851,9 +881,7 @@ class TemporalBehaviorEngine:
         if (timestamp - context.last_evidence_at) >= self.behavior.episode_timeout_seconds:
             logger.debug(
                 "episode timed out with no new evidence, resetting",
-                extra={
-                    "fields": {"camera_id": self.camera_id, "person_id": context.person_id}
-                },
+                extra={"fields": {"camera_id": self.camera_id, "person_id": context.person_id}},
             )
             if context.episode is not None:
                 context.episode.ended_at = timestamp

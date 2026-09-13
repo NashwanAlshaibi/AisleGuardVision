@@ -26,7 +26,7 @@ import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
-from aisleguardvision.core.types import COCO_SKELETON, COCO_KEYPOINT_ORDER  # noqa: E402
+from aisleguardvision.core.types import COCO_KEYPOINT_ORDER, COCO_SKELETON  # noqa: E402
 from aisleguardvision.simulation.scenarios import (  # noqa: E402
     FRAME_HEIGHT,
     FRAME_WIDTH,
@@ -118,11 +118,7 @@ def main(argv: list[str] | None = None) -> int:
     targets = sorted(SCENARIOS) if args.all else [args.scenario]
     for name in targets:
         scenario = get_scenario(name)
-        output = (
-            Path("data/samples") / f"{name.lower()}.mp4"
-            if args.all
-            else Path(args.output)
-        )
+        output = Path("data/samples") / f"{name.lower()}.mp4" if args.all else Path(args.output)
         output.parent.mkdir(parents=True, exist_ok=True)
 
         writer = cv2.VideoWriter(

@@ -180,9 +180,7 @@ def best_pose_for_track(track: PersonTrack, poses: list[PoseObservation]) -> Pos
     expanded = track.bbox.expanded(0.15)
     best: tuple[float, PoseObservation] | None = None
     for pose in poses:
-        points = np.array(
-            [(kp.x, kp.y) for kp in pose.keypoints.values() if kp.confidence >= 0.2]
-        )
+        points = np.array([(kp.x, kp.y) for kp in pose.keypoints.values() if kp.confidence >= 0.2])
         if points.size == 0:
             continue
         inside = (

@@ -24,7 +24,6 @@ from aisleguardvision.core.types import (
     Frame,
     RiskAssessment,
     RiskContribution,
-    SecurityEvent,
     ThreatLevel,
 )
 from aisleguardvision.events.cooldown import AlertCooldown
@@ -408,9 +407,7 @@ def test_dispatcher_survives_a_failing_provider():
             raise RuntimeError("provider exploded")
 
     good = RecordingProvider()
-    dispatcher = AlertDispatcher(
-        AlertsConfig(console=False), providers=[BrokenProvider(), good]
-    )
+    dispatcher = AlertDispatcher(AlertsConfig(console=False), providers=[BrokenProvider(), good])
     dispatcher.start()
     try:
         dispatcher.dispatch(build_event(assessment()))

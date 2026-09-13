@@ -18,7 +18,6 @@ from aisleguardvision.core.config import (
     InferenceConfig,
     ModelsConfig,
     SchedulerConfig,
-    ZoneConfig,
 )
 from aisleguardvision.core.metrics import Histogram, MetricsRegistry, RateMeter
 from aisleguardvision.core.types import (
@@ -31,7 +30,6 @@ from aisleguardvision.core.types import (
     PoseObservation,
     TrackState,
 )
-from aisleguardvision.events.dispatcher import AlertDispatcher, AlertProvider
 from aisleguardvision.inference.backend import (
     BackendCapabilities,
     DetectorBackend,
@@ -52,7 +50,6 @@ from aisleguardvision.inference.product_detector import (
 from aisleguardvision.inference.scheduler import BatchAccumulator, FrameScheduler
 from aisleguardvision.pipeline import CameraPipeline
 from aisleguardvision.simulation.scenarios import SHELF_ZONES, get_scenario, make_person
-
 
 # ---------------------------------------------------------------------------
 # Scripted backend
@@ -164,7 +161,9 @@ def test_pipeline_runs_every_stage_end_to_end():
     # Run every model on every frame so the scripted detections line up with
     # the scenario's frame indices.
     config.detection.scheduler = SchedulerConfig(
-        detection_fps=1000.0, pose_fps=1000.0, adaptive_pose=False,
+        detection_fps=1000.0,
+        pose_fps=1000.0,
+        adaptive_pose=False,
         pose_only_for_relevant_people=False,
     )
     pipeline, scenario = scripted_pipeline(config)
@@ -180,7 +179,9 @@ def test_pipeline_runs_every_stage_end_to_end():
 def test_pipeline_generates_an_incident_for_the_concealment_scenario():
     config = AppConfig()
     config.detection.scheduler = SchedulerConfig(
-        detection_fps=1000.0, pose_fps=1000.0, adaptive_pose=False,
+        detection_fps=1000.0,
+        pose_fps=1000.0,
+        adaptive_pose=False,
         pose_only_for_relevant_people=False,
     )
     pipeline, scenario = scripted_pipeline(config)
@@ -198,7 +199,9 @@ def test_pipeline_cooldown_limits_repeat_incidents():
     """One sustained sequence must not produce an incident per frame."""
     config = AppConfig()
     config.detection.scheduler = SchedulerConfig(
-        detection_fps=1000.0, pose_fps=1000.0, adaptive_pose=False,
+        detection_fps=1000.0,
+        pose_fps=1000.0,
+        adaptive_pose=False,
         pose_only_for_relevant_people=False,
     )
     pipeline, scenario = scripted_pipeline(config)
@@ -214,7 +217,9 @@ def test_pipeline_does_not_alert_on_benign_scenarios():
     for name in ("NORMAL_BROWSING", "PHONE_INTERACTION", "ITEM_TO_BASKET"):
         config = AppConfig()
         config.detection.scheduler = SchedulerConfig(
-            detection_fps=1000.0, pose_fps=1000.0, adaptive_pose=False,
+            detection_fps=1000.0,
+            pose_fps=1000.0,
+            adaptive_pose=False,
             pose_only_for_relevant_people=False,
         )
         pipeline, scenario = scripted_pipeline(config, name)
@@ -231,9 +236,7 @@ def test_pipeline_reports_zone_only_mode():
     pipeline = CameraPipeline(
         camera_id="cam_zo",
         config=config,
-        detector=PersonDetector(
-            NullBackend(ModelsConfig(), InferenceConfig()), config.detection
-        ),
+        detector=PersonDetector(NullBackend(ModelsConfig(), InferenceConfig()), config.detection),
         product_detector=ZoneOnlyProductDetector(),
     )
     assert pipeline.item_detection_available is False
@@ -246,9 +249,7 @@ def test_pipeline_survives_a_frame_with_no_detections():
     pipeline = CameraPipeline(
         camera_id="cam_empty",
         config=config,
-        detector=PersonDetector(
-            NullBackend(ModelsConfig(), InferenceConfig()), config.detection
-        ),
+        detector=PersonDetector(NullBackend(ModelsConfig(), InferenceConfig()), config.detection),
     )
     result = pipeline.process(frame_at(time.time(), 1))
     assert result.tracks == []
@@ -312,9 +313,7 @@ def test_backend_records_latency():
 
 
 def test_unknown_backend_falls_back_to_null_loudly():
-    backend = create_detector_backend(
-        ModelsConfig(backend="does-not-exist"), InferenceConfig()
-    )
+    backend = create_detector_backend(ModelsConfig(backend="does-not-exist"), InferenceConfig())
     assert backend.capabilities.name == "null"
 
 
@@ -433,9 +432,7 @@ def test_scheduler_rates_are_time_based_not_frame_based():
         scheduler = FrameScheduler(SchedulerConfig(detection_fps=10.0, adaptive_pose=False))
         step = 1.0 / fps
         return sum(
-            1
-            for index in range(int(fps * 2))
-            if scheduler.decide(index * step, []).run_detection
+            1 for index in range(int(fps * 2)) if scheduler.decide(index * step, []).run_detection
         )
 
     assert abs(count(30.0) - count(10.0)) <= 1
@@ -498,7 +495,9 @@ def test_scheduler_skips_pose_when_nobody_is_relevant():
 def test_scheduler_gives_baseline_coverage_when_no_zones_are_configured():
     """With nothing to be near, everybody gets attention rather than nobody."""
     scheduler = FrameScheduler(SchedulerConfig(adaptive_pose=True))
-    decision = scheduler.decide(0.0, [confirmed_track(1, Point(600, 400))], zones=ZoneRegistry("cam"))
+    decision = scheduler.decide(
+        0.0, [confirmed_track(1, Point(600, 400))], zones=ZoneRegistry("cam")
+    )
     assert decision.pose_targets
 
 

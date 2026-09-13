@@ -87,9 +87,9 @@ class PersonTracker:
         ``detections`` should already be filtered to people. Returns all
         currently confirmed tracks.
         """
-        person_detections = [
-            d for d in detections if d.object_class is ObjectClass.PERSON
-        ] or list(detections)
+        person_detections = [d for d in detections if d.object_class is ObjectClass.PERSON] or list(
+            detections
+        )
 
         dt = self._delta(timestamp)
         self._predict_all(dt, timestamp)
@@ -219,9 +219,7 @@ class PersonTracker:
         detection_boxes = [d.bbox for d in detections]
         return greedy_match(iou_matrix(track_boxes, detection_boxes), threshold)
 
-    def _update_track(
-        self, holder: _TrackedPerson, detection: Detection, timestamp: float
-    ) -> None:
+    def _update_track(self, holder: _TrackedPerson, detection: Detection, timestamp: float) -> None:
         holder.kalman.update(detection.bbox)
         track = holder.track
         track.bbox = holder.kalman.box

@@ -749,7 +749,9 @@ class AppConfig(_Base):
         )
         object.__setattr__(self.risk, "high_risk_threshold", self.behavior.alert_threshold)
         if not (
-            self.risk.elevated_threshold < self.risk.review_threshold < self.risk.high_risk_threshold
+            self.risk.elevated_threshold
+            < self.risk.review_threshold
+            < self.risk.high_risk_threshold
         ):
             raise ValueError(
                 "behavior.alert_threshold must stay above risk.review_threshold "

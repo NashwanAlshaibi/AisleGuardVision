@@ -302,7 +302,9 @@ def _split_key(key: str) -> tuple[str, str]:
     # Prometheus requires quoted label values.
     inner = labels[1:-1]
     quoted = ",".join(
-        f'{part.split("=", 1)[0]}="{part.split("=", 1)[1]}"' for part in inner.split(",") if "=" in part
+        f'{part.split("=", 1)[0]}="{part.split("=", 1)[1]}"'
+        for part in inner.split(",")
+        if "=" in part
     )
     return base, "{" + quoted + "}"
 

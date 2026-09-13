@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import pytest
+from pydantic import ValidationError
 
 from aisleguardvision.behavior.risk import RiskEngine
 from aisleguardvision.core.config import AppConfig, BehaviorConfig, RiskConfig
@@ -81,11 +82,7 @@ def test_confidence_is_clamped_to_the_unit_interval(engine):
 
 
 def test_score_is_clamped_to_0_100(engine):
-    everything = [
-        evidence(t)
-        for t in EvidenceType
-        if not t.is_negative
-    ]
+    everything = [evidence(t) for t in EvidenceType if not t.is_negative]
     result = assess(engine, everything)
     assert 0.0 <= result.risk_score <= 100.0
     assert result.raw_score >= result.risk_score
@@ -189,7 +186,7 @@ def test_threat_level_boundaries(engine, score, expected):
 
 
 def test_threat_thresholds_must_increase():
-    with pytest.raises(Exception):
+    with pytest.raises(ValidationError):
         RiskConfig(elevated_threshold=60, review_threshold=30, high_risk_threshold=85)
 
 
@@ -311,17 +308,17 @@ def test_explain_text_is_human_readable(engine):
 
 def test_positive_evidence_cannot_be_given_a_negative_weight():
     """A sign error here would invert the explanation shown to a reviewer."""
-    with pytest.raises(Exception):
+    with pytest.raises(ValidationError):
         RiskConfig(weights={"SHELF_INTERACTION": -10})
 
 
 def test_negative_evidence_cannot_be_given_a_positive_weight():
-    with pytest.raises(Exception):
+    with pytest.raises(ValidationError):
         RiskConfig(weights={"ITEM_PLACED_IN_BASKET": 50})
 
 
 def test_unknown_evidence_type_in_config_is_rejected():
-    with pytest.raises(Exception):
+    with pytest.raises(ValidationError):
         RiskConfig(weights={"DEFINITELY_NOT_A_REAL_EVIDENCE_TYPE": 10})
 
 
@@ -350,5 +347,5 @@ def test_no_single_positive_weight_can_trigger_an_alert():
 
 
 def test_behavior_config_rejects_a_ceiling_at_or_above_the_threshold():
-    with pytest.raises(Exception):
+    with pytest.raises(ValidationError):
         BehaviorConfig(alert_threshold=50, zone_only_risk_ceiling=50)
