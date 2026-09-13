@@ -95,6 +95,17 @@ class ItemTracker:
         self._retire(timestamp)
         return list(self._tracks.values())
 
+    def tick(self, timestamp: float) -> list[ItemTrack]:
+        """Advance time without a detection pass.
+
+        Called on frames where the scheduler skipped detection. Equivalent to
+        ``update([])`` -- the ladder is driven by elapsed time since the item
+        was last observed, so skipping a detection frame and genuinely losing
+        sight of an item are correctly distinguished by the clock rather than
+        by the call pattern.
+        """
+        return self.update([], timestamp)
+
     @property
     def tracks(self) -> list[ItemTrack]:
         return list(self._tracks.values())
@@ -224,11 +235,17 @@ class ItemTracker:
             )
 
     def _advance_ladder(self, track: ItemTrack, timestamp: float) -> None:
-        """Move an unobserved item one rung down the ladder, if enough time has passed."""
+        """Move an unobserved item one rung down the ladder, if enough time has passed.
+
+        The clock is anchored to when the item was last *observed*, not to the
+        first frame on which it was missed. Anchoring on the missed frame would
+        under-count the gap by one detection interval -- and since detection
+        runs at a fraction of the camera rate, that interval is not small.
+        """
         if track.status.is_resolved_benign:
             return
         if track.disappeared_at is None:
-            track.disappeared_at = timestamp
+            track.disappeared_at = track.last_seen
         unobserved = timestamp - track.disappeared_at
 
         config = self.config

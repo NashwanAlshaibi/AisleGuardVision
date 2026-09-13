@@ -202,9 +202,10 @@ class CameraPipeline:
             self.item_tracker.update(items, timestamp)
             self.metrics.inc(MetricNames.FRAMES_PROCESSED, **self._labels)
         else:
-            # Between detections, the Kalman filter carries the tracks forward.
-            # This is what makes a 10 FPS detector usable on a 30 FPS camera.
-            self.item_tracker.update([], timestamp)
+            # Between detections, the Kalman filter carries person tracks
+            # forward and the item ladder advances on elapsed time. This is
+            # what makes a 10 FPS detector usable on a 30 FPS camera.
+            self.item_tracker.tick(timestamp)
 
         if decision.run_pose and self.pose_estimator is not None and tracks:
             self._run_pose(frame, tracks, timestamp, decision.pose_targets, result)

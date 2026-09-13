@@ -67,8 +67,9 @@ class FrameScheduler:
     def __init__(self, config: SchedulerConfig, detection_fps_override: float = 0.0) -> None:
         self.config = config
         self._detection_interval = 1.0 / (detection_fps_override or config.detection_fps)
-        self._last_detection: float | None = None
-        self._last_pose: float | None = None
+        #: Next scheduled run time, not the last actual one -- see _due().
+        self._next_detection: float | None = None
+        self._next_pose: float | None = None
         self._current_pose_fps = config.pose_idle_fps if config.adaptive_pose else config.pose_fps
 
     # -- decisions ---------------------------------------------------------
@@ -82,11 +83,14 @@ class FrameScheduler:
         associated_ids: set[int] | None = None,
     ) -> ScheduleDecision:
         """Decide what to run for the frame at ``timestamp``."""
-        run_detection = self._due(self._last_detection, timestamp, self._detection_interval)
+        run_detection, next_detection = self._due(
+            self._next_detection, timestamp, self._detection_interval
+        )
 
         pose_fps = self._choose_pose_rate(tracks, zones, states, risks, associated_ids)
         self._current_pose_fps = pose_fps
-        run_pose = self._due(self._last_pose, timestamp, 1.0 / max(pose_fps, 1e-6))
+        pose_interval = 1.0 / max(pose_fps, 1e-6)
+        run_pose, next_pose = self._due(self._next_pose, timestamp, pose_interval)
 
         targets: list[PersonTrack] = []
         reason = ""
@@ -107,9 +111,9 @@ class FrameScheduler:
                 targets = list(tracks)
 
         if run_detection:
-            self._last_detection = timestamp
+            self._next_detection = next_detection
         if run_pose:
-            self._last_pose = timestamp
+            self._next_pose = next_pose
 
         return ScheduleDecision(
             run_detection=run_detection,
@@ -125,11 +129,11 @@ class FrameScheduler:
         Used when something just happened that we want pose evidence for --
         a new track entering a high-value zone, for instance.
         """
-        self._last_pose = None
+        self._next_pose = None
 
     def reset(self) -> None:
-        self._last_detection = None
-        self._last_pose = None
+        self._next_detection = None
+        self._next_pose = None
 
     @property
     def detection_fps(self) -> float:
@@ -141,14 +145,37 @@ class FrameScheduler:
 
     # -- internals ---------------------------------------------------------
     @staticmethod
-    def _due(last: float | None, now: float, interval: float) -> bool:
-        if last is None:
-            return True
-        elapsed = now - last
-        if elapsed < 0:
-            # Source seek or clock adjustment: run now and re-anchor.
-            return True
-        return elapsed >= interval
+    def _due(next_at: float | None, now: float, interval: float) -> tuple[bool, float]:
+        """Decide whether a stage is due, on a drift-free schedule.
+
+        Returns ``(is_due, next_scheduled_time)``.
+
+        The schedule advances by fixed intervals rather than re-anchoring to
+        each actual run time. Anchoring on the last actual run makes every
+        frame's lateness permanent, so the effective rate drifts steadily below
+        the configured one -- at 10 FPS requested the stage ends up running at
+        7 or 8, which quietly costs detection coverage nobody asked to give up.
+
+        The epsilon matters for the same reason: frame timestamps are floats,
+        and ``3 * (1/30)`` is 0.09999999999999999, which a bare ``>=`` rejects.
+        """
+        epsilon = interval * 1e-6
+        if next_at is None:
+            return True, now + interval
+        if now + epsilon < next_at:
+            # A clock going backwards means a source seek; re-anchor rather
+            # than stalling until the old schedule catches up.
+            if now < next_at - interval * 2:
+                return True, now + interval
+            return False, next_at
+
+        advanced = next_at + interval
+        if advanced <= now:
+            # Fell more than a whole interval behind (a stall or an overloaded
+            # GPU). Re-anchor instead of firing a catch-up burst, which would
+            # make an overload worse.
+            advanced = now + interval
+        return True, advanced
 
     def _choose_pose_rate(
         self,

@@ -868,7 +868,7 @@ class TemporalBehaviorEngine:
                 person_id=track.track_id,
                 camera_id=self.camera_id,
                 machine=BehaviorStateMachine(),
-                ledger=EvidenceLedger(default_ttl=self.behavior.temporal_window_seconds),
+                ledger=EvidenceLedger(),
                 episode_started_at=timestamp,
                 last_evidence_at=timestamp,
                 episode=EpisodeSummary(started_at=timestamp),

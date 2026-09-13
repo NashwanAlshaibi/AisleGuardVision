@@ -69,12 +69,17 @@ class BoundingBox:
     y2: float
 
     def __post_init__(self) -> None:
+        # Read both values before writing either: assigning x1 first would
+        # clobber the value the second assignment needs, collapsing an
+        # inverted box to zero area instead of normalizing it.
         if self.x1 > self.x2:
-            object.__setattr__(self, "x1", self.x2)
-            object.__setattr__(self, "x2", self.x1)
+            low, high = self.x2, self.x1
+            object.__setattr__(self, "x1", low)
+            object.__setattr__(self, "x2", high)
         if self.y1 > self.y2:
-            object.__setattr__(self, "y1", self.y2)
-            object.__setattr__(self, "y2", self.y1)
+            low, high = self.y2, self.y1
+            object.__setattr__(self, "y1", low)
+            object.__setattr__(self, "y2", high)
 
     # -- derived quantities ------------------------------------------------
     @property

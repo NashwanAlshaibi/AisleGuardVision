@@ -27,10 +27,17 @@ from ..core.types import EvidenceEvent, EvidenceType, Hand, Point, StorageRegion
 
 
 class EvidenceLedger:
-    """Deduplicating, TTL-aware store of evidence for one episode."""
+    """Deduplicating, TTL-aware store of evidence for one episode.
 
-    def __init__(self, default_ttl: float | None = None) -> None:
-        self.default_ttl = default_ttl
+    ``EvidenceEvent.ttl`` carries the whole lifetime policy and the ledger
+    never rewrites it. ``ttl=None`` means "structural fact about this episode,
+    valid until the episode ends" -- an item having been taken off a shelf does
+    not stop being true four seconds later, and expiring it would silently
+    dismantle a sequence mid-flight. The evidence factories set an explicit TTL
+    on the volatile observations instead.
+    """
+
+    def __init__(self) -> None:
         self._events: dict[tuple, EvidenceEvent] = {}
 
     def add(self, event: EvidenceEvent) -> bool:
@@ -40,8 +47,6 @@ class EvidenceLedger:
         it merely refreshed one already present -- the engine uses that to emit
         a log line and a state transition only on the first sighting.
         """
-        if event.ttl is None and self.default_ttl is not None:
-            event.ttl = self.default_ttl
         key = event.dedup_key
         existing = self._events.get(key)
         if existing is None:
@@ -54,8 +59,7 @@ class EvidenceLedger:
         existing.confidence = max(existing.confidence, event.confidence)
         existing.description = event.description
         existing.metadata.update(event.metadata)
-        if event.ttl is not None:
-            existing.ttl = event.ttl
+        existing.ttl = event.ttl
         return False
 
     def prune(self, now: float) -> list[EvidenceEvent]:
