@@ -1,0 +1,1 @@
+"""AisleGuard Vision camera package."""

@@ -1,0 +1,52 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+env/
+.python-version
+
+# Testing / tooling
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+coverage.xml
+
+# Secrets - never commit
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Model weights (downloaded on first run, large binaries)
+*.pt
+*.onnx
+*.engine
+*.plan
+*.trt
+models/
+
+# Runtime data
+data/incidents/**
+!data/incidents/.gitkeep
+data/samples/**
+!data/samples/.gitkeep
+!data/samples/README.md
+logs/
+*.log
+
+# Local operator overrides of shipped config
+config/*.local.yaml
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

@@ -1,0 +1,206 @@
+# AisleGuard Vision - application configuration.
+#
+# Every number that influences a decision lives here, not in the source.
+# Values of the form ${VAR} are resolved from the environment at load time.
+#
+# See also: config/detection.yaml (models, inference, tracking)
+#           config/cameras.yaml   (cameras and zones)
+
+# ---------------------------------------------------------------------------
+# Temporal behavior engine
+#
+# All durations are in seconds. Nothing in this system counts frames: a store
+# runs cameras at 10, 15, 20, 25 and 30 FPS, and a frame-count threshold would
+# mean something different on each one.
+# ---------------------------------------------------------------------------
+behavior:
+  # Rolling reasoning window. Volatile evidence expires after this.
+  temporal_window_seconds: 4.0
+
+  # Risk at or above this creates a reviewable incident. An alert means
+  # "possible concealment behavior - human review recommended", never
+  # "this person stole something".
+  alert_threshold: 85
+
+  # How long merchandise must stay unobserved before it is called MISSING.
+  item_missing_timeout_seconds: 1.25
+
+  # A person must be tracked this long before any evidence is scored, so a
+  # one-frame detector artifact can never produce an alert.
+  min_person_track_seconds: 1.0
+
+  # Continuous hand/item association required before it counts. One frame of
+  # overlap is never sufficient.
+  min_item_association_seconds: 0.4
+
+  # Per-person alert cooldown, and the risk increase that overrides it.
+  cooldown_seconds: 30
+  cooldown_escalation_delta: 10
+
+  # Sustained wrist presence required in a shelf zone.
+  min_shelf_interaction_seconds: 0.35
+  # How near a zone (in body heights) counts as "approaching" it.
+  shelf_approach_distance_ratio: 0.12
+  # Overlaps shorter than this are scored as accidental contact.
+  accidental_overlap_seconds: 0.2
+
+  # Quality gates. Below these, observations are treated as unreliable and
+  # raise NEGATIVE evidence.
+  low_pose_confidence: 0.40
+  low_track_confidence: 0.45
+
+  # Concealment motion.
+  storage_approach_travel_ratio: 0.12   # body heights of travel toward a region
+  storage_dwell_seconds: 0.50           # the hand must ARRIVE AND STAY
+  concealment_motion_speed_ratio: 0.25  # body heights/second
+  motion_window_seconds: 1.0            # window for the motion-profile check
+
+  # Episode lifecycle.
+  episode_timeout_seconds: 12.0
+  benign_reset_seconds: 2.0
+
+  # Ceiling on risk when no merchandise detector is available. Deliberately
+  # below alert_threshold: shelf geometry plus wrist kinematics is NOT enough
+  # evidence to ask a human to review a shopper. See docs/ARCHITECTURE.md.
+  zone_only_risk_ceiling: 59
+
+  # Pose-derived storage regions. All values are fractions of the subject's
+  # apparent body height / shoulder width, never fixed pixels, so one setting
+  # works at every distance from the camera.
+  storage_regions:
+    waist_radius_ratio: 0.10
+    torso_radius_ratio: 0.13
+    waist_lateral_offset_ratio: 0.55
+    jacket_offset_ratio: 0.12
+    bag_radius_ratio: 0.14
+    approach_radius_multiplier: 1.25
+
+# ---------------------------------------------------------------------------
+# Risk scoring
+#
+# The score is a clamped sum of weight * confidence over the active evidence.
+# There is no learned "shoplifting probability" anywhere in this system, and
+# there should never be one: it could not be audited, tuned per store, or
+# explained to the person being reviewed.
+#
+# Negative weights are large relative to positive ones on purpose. A wrong
+# alert sends staff to confront an innocent shopper, which costs far more than
+# a missed one.
+# ---------------------------------------------------------------------------
+risk:
+  weights:
+    # Positive - each is necessary, none is sufficient.
+    SHELF_INTERACTION: 10
+    HIGH_VALUE_ZONE_INTERACTION: 5
+    STABLE_HAND_ITEM_ASSOCIATION: 15
+    ITEM_REMOVED_FROM_SHELF: 10
+    HAND_MOVED_TO_STORAGE_REGION: 15
+    CONCEALMENT_MOTION_PROFILE: 10
+    ITEM_DISAPPEARED_NEAR_STORAGE: 25
+    ITEM_REMAINS_MISSING: 20
+
+    # Recorded for the reviewer, scored at zero: "nothing benign was observed"
+    # documents what the engine checked, and must not itself add risk.
+    NO_BASKET_PLACEMENT: 0
+    NO_SHELF_RETURN: 0
+
+    # Negative - false-positive control.
+    ITEM_RETURNED_TO_SHELF: -60
+    ITEM_PLACED_IN_BASKET: -70
+    ITEM_PLACED_IN_CART: -70
+    NORMAL_PHONE_INTERACTION: -70
+    PERSONAL_EFFECT_INTERACTION: -40
+    ITEM_VISIBLE_IN_HAND: -30
+    NO_MERCHANDISE_INTERACTION: -40
+    UNSTABLE_ITEM_TRACK: -25
+    LOW_PERSON_TRACK_CONFIDENCE: -25
+    LOW_POSE_CONFIDENCE: -20
+    TEMPORARY_OCCLUSION: -20
+    CAMERA_OCCLUSION: -20
+    SHORT_ACCIDENTAL_OVERLAP: -15
+    ITEM_DETECTION_UNAVAILABLE: 0
+
+  # Threat bands:  0-29 LOW | 30-59 ELEVATED | 60-84 REVIEW | 85-100 HIGH_RISK
+  elevated_threshold: 30
+  review_threshold: 60
+  high_risk_threshold: 85
+
+# ---------------------------------------------------------------------------
+# Incident recording
+# ---------------------------------------------------------------------------
+recording:
+  enabled: true
+  pre_event_seconds: 5
+  post_event_seconds: 5
+  min_clip_seconds: 2
+  clip_fps: 15
+  # mp4v is portable. Use avc1/h264 where your OpenCV build has an H.264
+  # encoder; on Jetson prefer the hardware encoder (see docs/JETSON.md).
+  codec: mp4v
+  # Buffered frames are downscaled: retaining 4K at 30 FPS for 5 seconds is
+  # about 1.2 GB per camera.
+  buffer_max_width: 1280
+  buffer_max_frames: 600
+  save_snapshot: true
+  annotate_media: true
+
+# ---------------------------------------------------------------------------
+# Storage and retention
+#
+# Only incidents are persisted, never the continuous stream. A 64-camera store
+# retaining raw video would write on the order of a terabyte per day.
+# ---------------------------------------------------------------------------
+storage:
+  incident_directory: data/incidents
+  retention:
+    # Off by default: silently deleting evidence is a policy decision a store
+    # makes, not one a default should make for them.
+    enabled: false
+    max_age_days: 30
+    max_total_gigabytes: 50
+    sweep_interval_seconds: 3600
+
+# ---------------------------------------------------------------------------
+# Alerting
+#
+# Delivery never runs on the inference path.
+# ---------------------------------------------------------------------------
+alerts:
+  console: true
+  webhook:
+    enabled: false
+    url: ${AISLEGUARD_WEBHOOK_URL}
+    token: ${AISLEGUARD_WEBHOOK_TOKEN}
+    timeout_seconds: 5
+    max_retries: 3
+    backoff_base_seconds: 1
+    backoff_max_seconds: 30
+    verify_tls: true
+  queue_size: 256
+  dispatch_review_level: false
+
+# ---------------------------------------------------------------------------
+# API
+# ---------------------------------------------------------------------------
+api:
+  enabled: false
+  host: ${AISLEGUARD_API_HOST:-127.0.0.1}
+  port: 8000
+  # Empty disables authentication. Acceptable ONLY on a trusted loopback
+  # interface; the server logs a warning when it is empty.
+  api_key: ${AISLEGUARD_API_KEY}
+  cors_origins: []
+  default_event_limit: 50
+
+# ---------------------------------------------------------------------------
+# Logging and metrics
+# ---------------------------------------------------------------------------
+logging:
+  level: ${AISLEGUARD_LOG_LEVEL:-INFO}
+  format: ${AISLEGUARD_LOG_FORMAT:-text}
+  stats_interval_seconds: 30
+
+metrics:
+  enabled: true
+  rate_window_seconds: 5
+  histogram_size: 512

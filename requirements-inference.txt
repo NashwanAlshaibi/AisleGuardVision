@@ -1,0 +1,18 @@
+# AisleGuard Vision - live inference requirements (YOLO11 via Ultralytics).
+#
+# Install AFTER requirements.txt:
+#
+#   pip install -r requirements.txt
+#   pip install -r requirements-inference.txt
+#
+# For CUDA builds of PyTorch, follow https://pytorch.org/get-started/locally/
+# and install torch/torchvision from the CUDA index FIRST, e.g.:
+#
+#   pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121
+#
+# On NVIDIA Jetson, do NOT install torch from PyPI. Use the NVIDIA-provided
+# JetPack wheels. See docs/JETSON.md.
+
+torch>=2.2
+torchvision>=0.17
+ultralytics>=8.3.0
